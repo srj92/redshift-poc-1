@@ -8,9 +8,11 @@ com/mettl/poc/service/S3Service.class
 com/mettl/poc/config/db/AWSConfig.class
 com/mettl/poc/model/CRF.class
 com/mettl/poc/repository/MongoRepositoryImpl.class
+com/mettl/poc/model/CRF$Value.class
 com/mettl/poc/repository/RedshiftRepository.class
 com/mettl/poc/repository/MongoRepository.class
 com/mettl/poc/repository/CandidateResultRepository.class
 com/mettl/poc/service/GzipCompressor.class
+com/mettl/poc/model/CRF$Key.class
 com/mettl/poc/service/CRFService.class
 com/mettl/poc/config/AppConfig.class

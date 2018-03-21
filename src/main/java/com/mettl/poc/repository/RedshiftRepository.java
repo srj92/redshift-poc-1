@@ -1,6 +1,7 @@
 package com.mettl.poc.repository;
 
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
@@ -9,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
+import org.springframework.util.StringUtils;
 
 import com.mettl.poc.config.db.RedshiftDataSource;
 
@@ -51,7 +53,7 @@ public class RedshiftRepository {
 	public void clearStagingTable(String tableName, String tableTemplate) {
 		Connection conn = null;
 		Statement stmt = null;
-		
+
 		String dropSql = "drop table " + tableName + ";";
 		String createLikeSql = "CREATE TABLE " + tableName + "(like " + tableTemplate + ");";
 
@@ -70,7 +72,7 @@ public class RedshiftRepository {
 			RedshiftDataSource.cleanUp(conn, stmt);
 		}
 	}
-	
+
 	public void upsertFromStagingCandidateResult() {
 		Connection conn = null;
 		Statement stmt = null;
@@ -96,17 +98,12 @@ public class RedshiftRepository {
 	}
 
 	public void copyToTagKey(String fileName) {
-		
+
 		Connection conn = null;
 		Statement stmt = null;
-		String copyQuerySql = "copy staging_tag_key from 's3://redshift-poc-mettl/tag_key_dump/"
-				+ fileName + "'\n" + 
-				"access_key_id '" + accessKey + "'\n" + 
-				"secret_access_key '" + secretKey + "'\n" + 
-				"delimiter ',' GZIP\n" + 
-				"NULL as 'NULL'\n" + 
-				"EMPTYASNULL\n" + 
-				"timeformat 'YYYY-MM-DDTHH:MI:SS';";
+		String copyQuerySql = "copy staging_tag_key from 's3://redshift-poc-mettl/tag_key_dump/" + fileName + "'\n"
+				+ "access_key_id '" + accessKey + "'\n" + "secret_access_key '" + secretKey + "'\n"
+				+ "delimiter ',' GZIP\n" + "NULL as 'NULL'\n" + "EMPTYASNULL\n" + "timeformat 'YYYY-MM-DDTHH:MI:SS';";
 
 		try {
 			conn = RedshiftDataSource.createNewConnection();
@@ -146,6 +143,34 @@ public class RedshiftRepository {
 		} finally {
 			RedshiftDataSource.cleanUp(conn, stmt);
 		}
+	}
+
+	public Integer fetchKeyIdByKeyName(String keyName) {
+		
+		Integer keyId = -1;
+		if (StringUtils.isEmpty(keyName)) {
+			return keyId;
+		}
+		
+		Connection conn = null;
+		Statement stmt = null;
+		String selectSql = "select key_id from tag_key where key_name = '" + keyName.replace("'", "\'") + "';";
+		try {
+			conn = RedshiftDataSource.getInstance().getConnection();
+			stmt = conn.createStatement();
+			ResultSet rs = stmt.executeQuery(selectSql);
+			
+			while (rs.next()) {
+				keyId = rs.getInt("key_id");
+			}
+			stmt.close();
+			conn.close();
+		} catch (SQLException sqlEx) {
+			LOGGER.error("Exception: " + sqlEx);
+		} finally {
+			RedshiftDataSource.cleanUp(conn, stmt);
+		}
+		return keyId;
 	}
 
 }

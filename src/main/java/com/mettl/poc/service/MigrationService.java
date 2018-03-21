@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import com.mettl.poc.model.CRF;
 import com.mettl.poc.model.CandidateReport;
@@ -69,6 +70,10 @@ public class MigrationService {
 			
 			this.migrateCandidateResults(crReports);
 			this.migrateCRFKeys(crReports);
+			
+			// Associate keyIds for crReports
+			this.populateKeyIdsForCandidateReports(crReports);
+			
 			this.migrateCRFValues(crReports);
 			this.migrateCandidateTagMapping(crReports);
 
@@ -77,19 +82,43 @@ public class MigrationService {
 		}
 	}
 
+	private void populateKeyIdsForCandidateReports(List<CandidateReport> crReports) {
+		Map<String, Integer> keyNameIdMap = new HashMap<>();
+		for (CandidateReport cr: crReports) {
+			Set<CRF> crfs = cr.getCrfs();
+			for (CRF crf : crfs) {
+				CRF.Key key = crf.getKey();
+				if (key!=null) {
+					String keyName = key.getKeyName();
+					if (!StringUtils.isEmpty(keyName)) {
+						Integer keyId = -1;
+						if (keyNameIdMap.containsKey(keyName)) {
+							keyId = keyNameIdMap.get(keyName);
+						} else {
+							keyId = redshiftRepository.fetchKeyIdByKeyName(keyName);
+							keyNameIdMap.put(keyName, keyId);
+						}
+						key.setKeyId(keyId);
+						System.out.println("----->" + key.getKeyId() + "----->" + key.getKeyName());
+					}
+				}
+			}
+		}
+	}
+
 	private void migrateCandidateTagMapping(List<CandidateReport> crReports) {
 		// TODO Auto-generated method stub
 	}
 
 	private void migrateCRFValues(List<CandidateReport> crReports) {
-		// TODO Auto-generated method stub
+		
 	}
 
 	private void migrateCRFKeys(List<CandidateReport> crReports) {
 		s3Service.writeCRFKeysToS3(crReports, getPreviousDate());
 		redshiftRepository.copyToTagKey("key_names_" + getPreviousDate() + ".csv.gz");
 		redshiftRepository.insertFromStagingTagKey();
-		redshiftRepository.clearStagingTable("tag_key", "staging_tag_key");
+		redshiftRepository.clearStagingTable("staging_tag_key", "staging_tag_key_template");
 	}
 
 	private void migrateCandidateResults(List<CandidateReport> crReports) {

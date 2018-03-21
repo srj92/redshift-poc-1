@@ -34,5 +34,10 @@ public class RedshiftRepositoryTests extends DataMigrationPocApplicationTests {
 	public void testInsertTagKeys() {
 		redshiftRepository.insertFromStagingTagKey();
 	}
+	
+	@Test
+	public void testFetchTagKeyName() {
+		System.out.println("--->" + redshiftRepository.fetchKeyIdByKeyName("Age"));
+	}
 
 }

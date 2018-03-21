@@ -63,7 +63,7 @@
 		    <groupId>com.zaxxer</groupId>
 		    <artifactId>HikariCP</artifactId>
 		</dependency>
-
+		
 		<dependency>
 			<groupId>com.amazon.redshift</groupId>
 			<artifactId>redshift-jdbc42</artifactId>

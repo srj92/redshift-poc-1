@@ -16,12 +16,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.mettl.poc.model.CRF;
 import com.mettl.poc.model.CandidateReport;
+import com.mettl.poc.model.TagValue;
 
 @Service
 public class S3Service {
@@ -123,7 +125,6 @@ public class S3Service {
 
 			s3client.putObject(new PutObjectRequest("redshift-poc-mettl/tag_key_dump",
 					"key_names_" + yyyymmdd + ".csv.gz", output));
-
 		} catch (AmazonServiceException e) {
 			LOGGER.error("Exception: " + e);
 		} catch (Exception ex) {
@@ -131,7 +132,50 @@ public class S3Service {
 		}
 	}
 	
+	public void writeCRFValuesToS3(List<CandidateReport> crReports, String yyyymmdd) {
+		try {
+			Set<String> tagValueNames= new HashSet<>();
+			Set<TagValue> tagValueSet = new HashSet<>(); 
+			
+			for (CandidateReport cr : crReports) {
+				Set<CRF> crfSet = cr.getCrfs();
+				if (crfSet != null) {
+					for (CRF crf: crfSet) {
+						CRF.Key key = crf.getKey();
+						CRF.Value value = crf.getValue();
+						
+						TagValue tagValue = new TagValue(key.getKeyId(), value.getValueName());
+						if (!tagValueNames.contains(value.getValueName())) {
+							tagValueSet.add(tagValue);
+						}
+					}	
+				}
+			}
 
+			Path path = Files.createTempFile("crf_value_names", ".csv");
+			File temp = path.toFile();
+			BufferedWriter bw = new BufferedWriter(new FileWriter(temp));
+			for (TagValue v : tagValueSet) {
+				if (v!=null && !StringUtils.isEmpty(v.getValueName()) && !"null".equals(v.getValueName())) {
+					bw.write(v.getValueName() + "," + v.getKeyId());
+					bw.write('\n');	
+				}
+			}
+			bw.close();
+			temp.deleteOnExit();
+
+			File output = new File(temp.getName() + ".gz");
+			GzipCompressor.compressGZIP(temp, output);
+
+			s3client.putObject(new PutObjectRequest("redshift-poc-mettl/tag_value_dump",
+					"value_names_" + yyyymmdd + ".csv.gz", output));
+		} catch (AmazonServiceException e) {
+			LOGGER.error("Exception: " + e);
+		} catch (Exception ex) {
+			LOGGER.error("Exception: " + ex);
+		}
+	}
+	
 	public static byte[] gzip(String str) {
 		try {
 			ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -144,4 +188,5 @@ public class S3Service {
 		}
 		return str.getBytes();
 	}
+	
 }

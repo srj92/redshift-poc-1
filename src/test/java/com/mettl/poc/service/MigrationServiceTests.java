@@ -12,7 +12,7 @@ public class MigrationServiceTests extends DataMigrationPocApplicationTests {
 	
 	@Test
 	public void testMigrateService() {	
-		migrationService.migrate("2018", "03", "20");
+		migrationService.migrate("2018", "03", "21");
 	}
 	
 }

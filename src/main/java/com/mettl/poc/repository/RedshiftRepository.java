@@ -151,11 +151,13 @@ public class RedshiftRepository {
 		if (StringUtils.isEmpty(keyName)) {
 			return keyId;
 		}
+		keyName = keyName.replace("'", "''");
 		
 		Connection conn = null;
 		Statement stmt = null;
-		String selectSql = "select key_id from tag_key where key_name = '" + keyName.replace("'", "\'") + "';";
+		String selectSql = "select key_id from tag_key where key_name = '" + keyName + "';";
 		try {
+			
 			conn = RedshiftDataSource.getInstance().getConnection();
 			stmt = conn.createStatement();
 			ResultSet rs = stmt.executeQuery(selectSql);

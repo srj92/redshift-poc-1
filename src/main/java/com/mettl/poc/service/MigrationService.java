@@ -69,17 +69,23 @@ public class MigrationService {
 			}
 			
 			this.migrateCandidateResults(crReports);
-			this.migrateCRFKeys(crReports);
 			
+			this.migrateCRFKeys(crReports);
 			// Associate keyIds for crReports
 			this.populateKeyIdsForCandidateReports(crReports);
 			
 			this.migrateCRFValues(crReports);
+			// Associate valueIds for crReports
+			this.populateValueIdsForCandidateReports(crReports);
+			
 			this.migrateCandidateTagMapping(crReports);
-
 		} catch (Exception e) {
 			LOGGER.error("Exception " + e.toString());
 		}
+	}
+
+	private void populateValueIdsForCandidateReports(List<CandidateReport> crReports) {
+		
 	}
 
 	private void populateKeyIdsForCandidateReports(List<CandidateReport> crReports) {
@@ -99,7 +105,6 @@ public class MigrationService {
 							keyNameIdMap.put(keyName, keyId);
 						}
 						key.setKeyId(keyId);
-						System.out.println("----->" + key.getKeyId() + "----->" + key.getKeyName());
 					}
 				}
 			}
@@ -111,7 +116,7 @@ public class MigrationService {
 	}
 
 	private void migrateCRFValues(List<CandidateReport> crReports) {
-		
+		s3Service.writeCRFValuesToS3(crReports, getPreviousDate());
 	}
 
 	private void migrateCRFKeys(List<CandidateReport> crReports) {

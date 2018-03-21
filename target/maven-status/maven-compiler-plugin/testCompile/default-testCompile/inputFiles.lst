@@ -1,0 +1,5 @@
+/home/suraj/workspace/mettl/data-migration-poc/src/test/java/com/mettl/poc/repository/RedshiftRepositoryTests.java
+/home/suraj/workspace/mettl/data-migration-poc/src/test/java/com/mettl/poc/service/MigrationServiceTests.java
+/home/suraj/workspace/mettl/data-migration-poc/src/test/java/com/mettl/poc/DataMigrationPocApplicationTests.java
+/home/suraj/workspace/mettl/data-migration-poc/src/test/java/com/mettl/poc/repository/CandidateRepositoryTests.java
+/home/suraj/workspace/mettl/data-migration-poc/src/test/java/com/mettl/poc/repository/MongoRepositoryTests.java

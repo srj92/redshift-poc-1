@@ -1,0 +1,5 @@
+com/mettl/poc/DataMigrationPocApplicationTests.class
+com/mettl/poc/repository/MongoRepositoryTests.class
+com/mettl/poc/service/MigrationServiceTests.class
+com/mettl/poc/repository/RedshiftRepositoryTests.class
+com/mettl/poc/repository/CandidateRepositoryTests.class

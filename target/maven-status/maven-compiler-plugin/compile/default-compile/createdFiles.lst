@@ -1,0 +1,16 @@
+com/mettl/poc/service/MigrationService.class
+com/mettl/poc/DataMigrationPocApplication.class
+com/mettl/poc/model/CandidateReport.class
+com/mettl/poc/model/CandidateResult.class
+com/mettl/poc/config/db/MongoConfig.class
+com/mettl/poc/config/db/RedshiftDataSource.class
+com/mettl/poc/service/S3Service.class
+com/mettl/poc/config/db/AWSConfig.class
+com/mettl/poc/model/CRF.class
+com/mettl/poc/repository/MongoRepositoryImpl.class
+com/mettl/poc/repository/RedshiftRepository.class
+com/mettl/poc/repository/MongoRepository.class
+com/mettl/poc/repository/CandidateResultRepository.class
+com/mettl/poc/service/GzipCompressor.class
+com/mettl/poc/service/CRFService.class
+com/mettl/poc/config/AppConfig.class

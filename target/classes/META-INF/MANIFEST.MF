@@ -1,0 +1,10 @@
+Manifest-Version: 1.0
+Implementation-Title: data-migration-poc
+Implementation-Version: 0.0.1-SNAPSHOT
+Built-By: suraj
+Implementation-Vendor-Id: com.mettl.poc
+Build-Jdk: 1.8.0_161
+Implementation-URL: https://projects.spring.io/spring-boot/#/spring-bo
+ ot-starter-parent/data-migration-poc
+Created-By: Maven Integration for Eclipse
+

@@ -11,90 +11,100 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import com.mettl.poc.model.CRF;
+import com.mettl.poc.model.CandidateInstanceTag;
 import com.mettl.poc.model.CandidateReport;
 import com.mettl.poc.model.CandidateResult;
+import com.mettl.poc.model.TagValue;
 import com.mettl.poc.repository.CandidateResultRepository;
 import com.mettl.poc.repository.RedshiftRepository;
 
 @Service
 public class MigrationService {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(MigrationService.class);
-
 	@Autowired
 	private CandidateResultRepository candidateResultRepository;
-
 	@Autowired
 	private RedshiftRepository redshiftRepository;
-
 	@Autowired
 	private CRFService crfService;
-
 	@Autowired
 	private S3Service s3Service;
 
 	public void migrate(String year, String month, String day) {
-		try {
-			List<CandidateResult> candidateResults = (List<CandidateResult>) candidateResultRepository.findByUpdatedOn(year, month, day);
+		List<CandidateResult> candidateResults = (List<CandidateResult>) candidateResultRepository.findByUpdatedOn(year,
+				month, day);
 
-			List<CandidateReport> crReports = new ArrayList<>();
-			Iterator<CandidateResult> i = candidateResults.iterator();
-			while (i.hasNext()) {
-				CandidateResult cr = i.next();
-				CandidateReport report = adaptReportFromCandidateResult(cr);
-				crReports.add(report);
-				i.remove();
-			}
-			
-			Map<Long, Set<Long>> clientAndCandidateIidMap = new HashMap<>();
-			for (CandidateReport cr : crReports) {
-				Set<Long> cids = clientAndCandidateIidMap.get(cr.getClientId());
-				if (cids == null || cids.isEmpty()) {
-					cids = new HashSet<>();
-					clientAndCandidateIidMap.put(cr.getClientId(), cids);
-				} 
-				cids.add(cr.getCandidateInstanceId());
-			}
-			
-			Map<Long, Set<CRF>> candidateCRFMap = crfService.getCrfs(clientAndCandidateIidMap);
-			for (CandidateReport cr: crReports) {
-				cr.setCrfs(candidateCRFMap.get(cr.getCandidateInstanceId()));
-			}
-			
-			this.migrateCandidateResults(crReports);
-			
-			this.migrateCRFKeys(crReports);
-			// Associate keyIds for crReports
-			this.populateKeyIdsForCandidateReports(crReports);
-			
-			this.migrateCRFValues(crReports);
-			// Associate valueIds for crReports
-			this.populateValueIdsForCandidateReports(crReports);
-			
-			this.migrateCandidateTagMapping(crReports);
-		} catch (Exception e) {
-			LOGGER.error("Exception " + e.toString());
+		List<CandidateReport> crReports = new ArrayList<>();
+		Iterator<CandidateResult> i = candidateResults.iterator();
+		while (i.hasNext()) {
+			CandidateResult cr = i.next();
+			CandidateReport report = adaptReportFromCandidateResult(cr);
+			crReports.add(report);
+			i.remove();
 		}
+
+		Map<Long, Set<Long>> clientAndCandidateIidMap = new HashMap<>();
+		for (CandidateReport cr : crReports) {
+			Set<Long> cids = clientAndCandidateIidMap.get(cr.getClientId());
+			if (cids == null || cids.isEmpty()) {
+				cids = new HashSet<>();
+				clientAndCandidateIidMap.put(cr.getClientId(), cids);
+			}
+			cids.add(cr.getCandidateInstanceId());
+		}
+
+		Map<Long, Set<CandidateInstanceTag>> candidateCRFMap = crfService.getCrfs(clientAndCandidateIidMap);
+		for (CandidateReport cr : crReports) {
+			cr.setCrfs(candidateCRFMap.get(cr.getCandidateInstanceId()));
+		}
+
+		this.migrateCandidateResults(crReports);
+
+		this.migrateCRFKeys(crReports);
+		// Associate keyIds for crReports
+		this.populateKeyIdsForCandidateReports(crReports);
+
+		this.migrateCRFValues(crReports);
+		// Associate valueIds for crReports
+		this.populateValueIdsForCandidateReports(crReports);
+
+		this.migrateCandidateTagMapping(crReports);
 	}
 
 	private void populateValueIdsForCandidateReports(List<CandidateReport> crReports) {
-		
+		Map<TagValue, Integer> tagValueIdMap = new HashMap<>();
+		for (CandidateReport cr : crReports) {
+			Set<CandidateInstanceTag> crfs = cr.getCrfs();
+			for (CandidateInstanceTag crf : crfs) {
+				CandidateInstanceTag.Key key = crf.getKey();
+				CandidateInstanceTag.Value value = crf.getValue();
+				int valueId = -1;
+
+				if (value != null && key != null) {
+					TagValue tagValue = new TagValue(key.getKeyId(), value.getValueName());
+					if (tagValueIdMap.containsKey(tagValue)) {
+						valueId = tagValueIdMap.get(tagValue);
+					} else {
+						valueId = redshiftRepository.fetchValueId(tagValue);
+						tagValueIdMap.put(tagValue, valueId);
+					}
+					value.setValueId(valueId);
+				}
+			}
+		}
 	}
 
 	private void populateKeyIdsForCandidateReports(List<CandidateReport> crReports) {
 		Map<String, Integer> keyNameIdMap = new HashMap<>();
-		for (CandidateReport cr: crReports) {
-			Set<CRF> crfs = cr.getCrfs();
-			for (CRF crf : crfs) {
-				CRF.Key key = crf.getKey();
-				if (key!=null) {
+		for (CandidateReport cr : crReports) {
+			Set<CandidateInstanceTag> crfs = cr.getCrfs();
+			for (CandidateInstanceTag crf : crfs) {
+				CandidateInstanceTag.Key key = crf.getKey();
+				if (key != null) {
 					String keyName = key.getKeyName();
 					if (!StringUtils.isEmpty(keyName)) {
 						Integer keyId = -1;
@@ -112,16 +122,22 @@ public class MigrationService {
 	}
 
 	private void migrateCandidateTagMapping(List<CandidateReport> crReports) {
-		// TODO Auto-generated method stub
+		s3Service.writeTagKeyValueMappingToS3(crReports, getPreviousDate());
+		redshiftRepository.copyToStagingTagKVMapping("tag_key_value_mapping_" + getPreviousDate() + ".csv.gz");
+		redshiftRepository.insertFromStagingTagKVMap();
+		redshiftRepository.clearStagingTable("staging_tag_key_value_mapping", "staging_tag_key_value_mapping_template");
 	}
 
 	private void migrateCRFValues(List<CandidateReport> crReports) {
 		s3Service.writeCRFValuesToS3(crReports, getPreviousDate());
+		redshiftRepository.copyToStagingTagValue("value_names_" + getPreviousDate() + ".csv.gz");
+		redshiftRepository.insertFromStagingTagValue();
+		redshiftRepository.clearStagingTable("staging_tag_value", "staging_tag_value_template");
 	}
 
 	private void migrateCRFKeys(List<CandidateReport> crReports) {
 		s3Service.writeCRFKeysToS3(crReports, getPreviousDate());
-		redshiftRepository.copyToTagKey("key_names_" + getPreviousDate() + ".csv.gz");
+		redshiftRepository.copyToStagingTagKey("key_names_" + getPreviousDate() + ".csv.gz");
 		redshiftRepository.insertFromStagingTagKey();
 		redshiftRepository.clearStagingTable("staging_tag_key", "staging_tag_key_template");
 	}

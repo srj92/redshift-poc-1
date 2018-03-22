@@ -16,12 +16,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.PutObjectRequest;
-import com.mettl.poc.model.CRF;
+import com.mettl.poc.model.CandidateInstanceTag;
 import com.mettl.poc.model.CandidateReport;
 import com.mettl.poc.model.TagValue;
 
@@ -93,26 +92,26 @@ public class S3Service {
 			LOGGER.error("Exception: " + ex);
 		}
 	}
-	
+
 	public void writeCRFKeysToS3(List<CandidateReport> crReports, String yyyymmdd) {
 		try {
 			Set<String> keyNames = new HashSet<>();
 			for (CandidateReport cr : crReports) {
-				Set<CRF> crfSet = cr.getCrfs();
+				Set<CandidateInstanceTag> crfSet = cr.getCrfs();
 				if (crfSet != null) {
-					for (CRF crf: crfSet) {
-						CRF.Key key = crf.getKey();
+					for (CandidateInstanceTag crf : crfSet) {
+						CandidateInstanceTag.Key key = crf.getKey();
 						if (!keyNames.contains(key.getKeyName())) {
 							keyNames.add(key.getKeyName());
 						}
-					}	
+					}
 				}
 			}
 
 			Path path = Files.createTempFile("crf_key_names", ".csv");
 			File temp = path.toFile();
 			BufferedWriter bw = new BufferedWriter(new FileWriter(temp));
-			
+
 			for (String keyName : keyNames) {
 				bw.write(keyName + "");
 				bw.write('\n');
@@ -131,24 +130,24 @@ public class S3Service {
 			LOGGER.error("Exception: " + ex);
 		}
 	}
-	
+
 	public void writeCRFValuesToS3(List<CandidateReport> crReports, String yyyymmdd) {
 		try {
-			Set<String> tagValueNames= new HashSet<>();
-			Set<TagValue> tagValueSet = new HashSet<>(); 
-			
+			Set<String> tagValueNames = new HashSet<>();
+			Set<TagValue> tagValueSet = new HashSet<>();
+
 			for (CandidateReport cr : crReports) {
-				Set<CRF> crfSet = cr.getCrfs();
+				Set<CandidateInstanceTag> crfSet = cr.getCrfs();
 				if (crfSet != null) {
-					for (CRF crf: crfSet) {
-						CRF.Key key = crf.getKey();
-						CRF.Value value = crf.getValue();
-						
+					for (CandidateInstanceTag crf : crfSet) {
+						CandidateInstanceTag.Key key = crf.getKey();
+						CandidateInstanceTag.Value value = crf.getValue();
+
 						TagValue tagValue = new TagValue(key.getKeyId(), value.getValueName());
 						if (!tagValueNames.contains(value.getValueName())) {
 							tagValueSet.add(tagValue);
 						}
-					}	
+					}
 				}
 			}
 
@@ -156,10 +155,8 @@ public class S3Service {
 			File temp = path.toFile();
 			BufferedWriter bw = new BufferedWriter(new FileWriter(temp));
 			for (TagValue v : tagValueSet) {
-				if (v!=null && !StringUtils.isEmpty(v.getValueName()) && !"null".equals(v.getValueName())) {
-					bw.write(v.getValueName() + "," + v.getKeyId());
-					bw.write('\n');	
-				}
+				bw.write(v.getValueName() + "," + v.getKeyId());
+				bw.write('\n');
 			}
 			bw.close();
 			temp.deleteOnExit();
@@ -169,6 +166,32 @@ public class S3Service {
 
 			s3client.putObject(new PutObjectRequest("redshift-poc-mettl/tag_value_dump",
 					"value_names_" + yyyymmdd + ".csv.gz", output));
+		} catch (AmazonServiceException e) {
+			LOGGER.error("Exception: " + e);
+		} catch (Exception ex) {
+			LOGGER.error("Exception: " + ex);
+		}
+	}
+
+	public void writeTagKeyValueMappingToS3(List<CandidateReport> crReports, String previousDate) {
+		try {
+			Path path = Files.createTempFile("crf_value_names", ".csv");
+			File temp = path.toFile();
+			BufferedWriter bw = new BufferedWriter(new FileWriter(temp));
+			for (CandidateReport cr : crReports) {
+				Set<CandidateInstanceTag> crfs = cr.getCrfs();
+				for (CandidateInstanceTag crf : crfs) {
+					bw.write(cr.getCandidateInstanceId() + "," + crf.getKey().getKeyId() + "," + crf.getValue().getValueId() + "," + (crf.isCrf()?"1": "0"));
+					bw.write('\n');
+				}
+			}
+			bw.close();
+			temp.deleteOnExit();
+
+			File output = new File(temp.getName() + ".gz");
+			GzipCompressor.compressGZIP(temp, output);
+			s3client.putObject(new PutObjectRequest("redshift-poc-mettl/tag_key_value_mapping_dump",
+					"tag_key_value_mapping_" + previousDate + ".csv.gz", output));
 		} catch (AmazonServiceException e) {
 			LOGGER.error("Exception: " + e);
 		} catch (Exception ex) {
@@ -188,5 +211,5 @@ public class S3Service {
 		}
 		return str.getBytes();
 	}
-	
+
 }

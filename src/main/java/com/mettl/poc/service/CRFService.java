@@ -8,7 +8,7 @@ import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.mettl.poc.model.CRF;
+import com.mettl.poc.model.CandidateInstanceTag;
 import com.mettl.poc.repository.MongoRepository;
 
 @Service
@@ -19,11 +19,12 @@ public class CRFService {
 
 	private Map<Long, Map<Integer, String>> clientCrfKeyMapping = new HashMap<>();
 
-	private Set<CRF> mergeCrfKeyValues(Map<Integer, String> crfKeyMap, Map<Integer, String> crfValuesMap) {
-		Set<CRF> crfSet = new HashSet<>();
+	private Set<CandidateInstanceTag> mergeCrfKeyValues(Map<Integer, String> crfKeyMap, Map<Integer, String> crfValuesMap) {
+		Set<CandidateInstanceTag> crfSet = new HashSet<>();
 		Set<Integer> keyIdSet = crfKeyMap.keySet();
 		for (Integer keyId : keyIdSet) {
-			CRF crf = new CRF();
+			CandidateInstanceTag crf = new CandidateInstanceTag();
+			crf.setCrf(true);
 			crf.setKey(crf.new Key(crfKeyMap.get(keyId)));
 			crf.setValue(crf.new Value(crfValuesMap.get(keyId)));
 			crfSet.add(crf);
@@ -31,8 +32,8 @@ public class CRFService {
 		return crfSet;
 	}
 
-	public synchronized Map<Long, Set<CRF>> getCrfs(Map<Long, Set<Long>> clientAndCandidateIdMap) {
-		Map<Long, Set<CRF>> resultCiidCrfMap = new HashMap<>();
+	public synchronized Map<Long, Set<CandidateInstanceTag>> getCrfs(Map<Long, Set<Long>> clientAndCandidateIdMap) {
+		Map<Long, Set<CandidateInstanceTag>> resultCiidCrfMap = new HashMap<>();
 		Map<Long, Map<Integer, String>> crfKeysMap = new HashMap<>();
 		
 		for (Long clientId : clientAndCandidateIdMap.keySet()) {
@@ -42,7 +43,7 @@ public class CRFService {
 			Set<Long> ciids = clientAndCandidateIdMap.get(clientId);
 			for (Long ciid : ciids) {
 				Map<Integer, String> crfValuesMap = mongoRepository.getCandidateCrfValues(ciid);
-				Set<CRF> crfsForACiid = mergeCrfKeyValues(crfKeysMap.get(clientId), crfValuesMap);
+				Set<CandidateInstanceTag> crfsForACiid = mergeCrfKeyValues(crfKeysMap.get(clientId), crfValuesMap);
 				resultCiidCrfMap.put(ciid, crfsForACiid);
 			}
 		}

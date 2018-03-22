@@ -1,10 +1,17 @@
 package com.mettl.poc.model;
 
-public class CRF {
+public class CandidateInstanceTag {
 
+	private boolean isCrf;
 	private Key key;
 	private Value value;
 	
+	public boolean isCrf() {
+		return isCrf;
+	}
+	public void setCrf(boolean isCrf) {
+		this.isCrf = isCrf;
+	}
 	public Key getKey() {
 		return key;
 	}
@@ -17,30 +24,30 @@ public class CRF {
 	public void setValue(Value value) {
 		this.value = value;
 	}
-	public CRF() {
+	public CandidateInstanceTag() {
 		super();
 	}
-	public CRF(Key key, Value value) {
+	public CandidateInstanceTag(Key key, Value value) {
 		super();
 		this.key = key;
 		this.value = value;
 	}
 	
-	public CRF(Value value) {
+	public CandidateInstanceTag(Value value) {
 		super();
 		this.value = value;
 	}
 	
-	public CRF(Key key) {
+	public CandidateInstanceTag(Key key) {
 		super();
 		this.key = key;
 	}
 	
 	@Override
 	public String toString() {
-		return "CRF [key=" + key + ", value=" + value + "]";
+		return "CandidateInstanceTag [isCrf=" + isCrf + ", key=" + key + ", value=" + value + "]";
 	}
-	
+
 	public class Key {
 
 		private Integer keyId;

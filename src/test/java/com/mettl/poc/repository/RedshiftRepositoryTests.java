@@ -14,6 +14,12 @@ public class RedshiftRepositoryTests extends DataMigrationPocApplicationTests {
 	public void testRedshiftCopy() {
 		redshiftRepository.copyToCandidateResultStaging("candidate_result_2018-03-20.csv.gz");
 	}
+	
+	@Test
+	public void testRedshiftCopyTagKVMapping() {
+		redshiftRepository.copyToStagingTagKVMapping("tag_key_value_mapping_2018-03-21.csv.gz");
+	}
+	
 
 	@Test
 	public void testUpsertCandidateResults() {
@@ -27,7 +33,7 @@ public class RedshiftRepositoryTests extends DataMigrationPocApplicationTests {
 
 	@Test
 	public void testRedshiftCopyKeys() {
-		redshiftRepository.copyToTagKey("key_names_2018-03-20.csv.gz");
+		redshiftRepository.copyToStagingTagKey("key_names_2018-03-20.csv.gz");
 	}
 	
 	@Test

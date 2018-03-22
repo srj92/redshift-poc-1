@@ -23,7 +23,7 @@ public class CandidateReport {
 	private Integer isDownloaded;
 	private Integer isDeleted;
 	private Integer isStarred;
-	private Set<CRF> crfs;
+	private Set<CandidateInstanceTag> crfs;
 
 	public Long getClientId() {
 		return clientId;
@@ -169,11 +169,11 @@ public class CandidateReport {
 		this.isStarred = isStarred;
 	}
 
-	public Set<CRF> getCrfs() {
+	public Set<CandidateInstanceTag> getCrfs() {
 		return crfs;
 	}
 
-	public void setCrfs(Set<CRF> crfs) {
+	public void setCrfs(Set<CandidateInstanceTag> crfs) {
 		this.crfs = crfs;
 	}
 

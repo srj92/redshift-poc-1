@@ -49,18 +49,13 @@ public class RedshiftDataSource {
 	}
 
 	
-	public static void cleanUp(Connection conn, Statement stmt) {
+	public static void cleanUp(Statement stmt) {
 		try {
 			if (stmt != null)
 				stmt.close();
 		} catch (Exception ex) {
 		}
-		try {
-			if (conn != null)
-				conn.close();
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
+		
 	}
 
 }

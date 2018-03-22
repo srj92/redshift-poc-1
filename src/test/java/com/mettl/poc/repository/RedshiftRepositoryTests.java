@@ -42,6 +42,11 @@ public class RedshiftRepositoryTests extends DataMigrationPocApplicationTests {
 	}
 	
 	@Test
+	public void testUpdateCRQuery() {
+		//redshiftRepository.updateCandidateReport(cr);
+	}
+	
+	@Test
 	public void testFetchTagKeyName() {
 		System.out.println("--->" + redshiftRepository.fetchKeyIdByKeyName("Age"));
 	}

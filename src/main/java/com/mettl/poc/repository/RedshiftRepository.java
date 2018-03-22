@@ -12,7 +12,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
+import com.mettl.poc.builder.RedshiftQueryBuilder;
 import com.mettl.poc.config.db.RedshiftDataSource;
+import com.mettl.poc.model.CandidateReport;
 import com.mettl.poc.model.TagValue;
 
 @Repository
@@ -27,6 +29,9 @@ public class RedshiftRepository {
 	@Autowired
 	@Qualifier("secretKey")
 	private String secretKey;
+	
+	@Autowired
+	private RedshiftQueryBuilder queryBuilder;
 
 	public void copyToCandidateResultStaging(String fileName) {
 		Connection conn = null;
@@ -222,7 +227,7 @@ public class RedshiftRepository {
 
 		Connection conn = null;
 		Statement stmt = null;
-		String selectSql = "select value_id from tag_value where value_name = '" + valueName +"' and key_id = "
+		String selectSql = "select value_id from tag_value where value_name = '" + valueName + "' and key_id = "
 				+ tagValue.getKeyId() + ";";
 		try {
 			conn = RedshiftDataSource.getInstance().getConnection();
@@ -264,15 +269,14 @@ public class RedshiftRepository {
 		} finally {
 			RedshiftDataSource.cleanUp(stmt);
 		}
-	
-		
+
 	}
 
 	public void copyToStagingTagKVMapping(String fileName) {
 		Connection conn = null;
 		Statement stmt = null;
-		String copyQuerySql = "copy staging_tag_key_value_mapping from 's3://redshift-poc-mettl/tag_key_value_mapping_dump/" + fileName + "'\n"
-				+ "access_key_id '" + accessKey + "'\n" + "secret_access_key '" + secretKey + "'\n"
+		String copyQuerySql = "copy staging_tag_key_value_mapping from 's3://redshift-poc-mettl/tag_key_value_mapping_dump/"
+				+ fileName + "'\n" + "access_key_id '" + accessKey + "'\n" + "secret_access_key '" + secretKey + "'\n"
 				+ "delimiter ',' GZIP\n" + "NULL as 'NULL'\n" + "EMPTYASNULL\n" + "timeformat 'YYYY-MM-DDTHH:MI:SS';";
 
 		try {
@@ -280,6 +284,24 @@ public class RedshiftRepository {
 			stmt = conn.createStatement();
 			stmt.executeUpdate(copyQuerySql);
 
+			stmt.close();
+			conn.close();
+		} catch (SQLException sqlEx) {
+			LOGGER.error("Exception: " + sqlEx);
+		} finally {
+			RedshiftDataSource.cleanUp(stmt);
+		}
+	}
+
+	public void updateCandidateReport(CandidateReport cr) {
+		Connection conn = null;
+		Statement stmt = null;
+		String sql = queryBuilder.buildCandidateReportUpdateSql(cr);
+		System.out.println(" ---> " + sql);
+		try {
+			conn = RedshiftDataSource.getInstance().getConnection();
+			stmt = conn.createStatement();
+			stmt.executeUpdate(sql);
 			stmt.close();
 			conn.close();
 		} catch (SQLException sqlEx) {

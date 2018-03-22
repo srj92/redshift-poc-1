@@ -4,6 +4,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.mettl.poc.DataMigrationPocApplicationTests;
+import com.mettl.poc.model.CandidateReport;
 
 public class RedshiftRepositoryTests extends DataMigrationPocApplicationTests {
 
@@ -43,12 +44,17 @@ public class RedshiftRepositoryTests extends DataMigrationPocApplicationTests {
 	
 	@Test
 	public void testUpdateCRQuery() {
-		//redshiftRepository.updateCandidateReport(cr);
+		CandidateReport cr = new CandidateReport();
+		cr.setCandidateInstanceId(1454812l);
+		cr.setClientId(10906l);
+		cr.setAssessmentMaxScore(30);
+		
+		redshiftRepository.updateCandidateReport(cr);
 	}
 	
 	@Test
 	public void testFetchTagKeyName() {
-		System.out.println("--->" + redshiftRepository.fetchKeyIdByKeyName("Age"));
+		//System.out.println("--->" + redshiftRepository.fetchKeyIdByKeyName("Age"));
 	}
 
 }

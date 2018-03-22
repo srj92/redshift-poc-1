@@ -12,7 +12,7 @@ public class RedshiftQueryBuilder {
 	public String buildCandidateReportUpdateSql(CandidateReport cr) {
 		
 		String updateQueryPrefix = "update candidate_result set ";
-		String whereCondition = " where candidate_instance_id = " + cr.getCandidateInstanceId();
+		String whereCondition = " where candidate_instance_id = " + cr.getCandidateInstanceId() + ";";
 		
 		StringBuilder cols = new StringBuilder();
 		if (cr.getAssessmentId() != null) {
@@ -60,7 +60,7 @@ public class RedshiftQueryBuilder {
 		if (cr.getTimeTaken() != null) {
 			cols.append("time_taken = " + cr.getTimeTaken() + ",");
 		}
-		cols.append("updated_on = " + LocalDateTime.now());
+		cols.append("updated_on = '" + LocalDateTime.now() + "' ");
 		return updateQueryPrefix + cols.toString() + whereCondition;
 	}
 	

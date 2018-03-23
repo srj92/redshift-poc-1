@@ -1,11 +1,11 @@
-package com.mettl.poc.messaging.requests;
+package com.mettl.poc.messaging.dto;
 
 import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class CandidateResultUpdateRequest {
+public class CandidateResultDTO {
 
 	private Long candidateInstanceId;
 	private Long clientId;

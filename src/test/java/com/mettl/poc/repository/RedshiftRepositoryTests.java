@@ -3,6 +3,7 @@ package com.mettl.poc.repository;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.mettl.poc.DataMigrationPocApplicationTests;
 import com.mettl.poc.model.CandidateReport;
 
@@ -43,12 +44,15 @@ public class RedshiftRepositoryTests extends DataMigrationPocApplicationTests {
 	}
 	
 	@Test
-	public void testUpdateCRQuery() {
+	public void testUpdateCRQuery() throws JsonProcessingException {
 		CandidateReport cr = new CandidateReport();
 		cr.setCandidateInstanceId(1454812l);
 		cr.setClientId(10906l);
 		cr.setAssessmentMaxScore(30);
 		
+		/*ObjectMapper map = new ObjectMapper();
+		System.out.println(map.writeValueAsString(cr));
+		*/
 		redshiftRepository.updateCandidateReport(cr);
 	}
 	

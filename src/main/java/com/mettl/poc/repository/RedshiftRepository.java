@@ -13,7 +13,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
 import com.mettl.poc.builder.RedshiftQueryBuilder;
-import com.mettl.poc.config.db.RedshiftDataSource;
+import com.mettl.poc.config.RedshiftDataSource;
 import com.mettl.poc.model.CandidateReport;
 import com.mettl.poc.model.TagValue;
 

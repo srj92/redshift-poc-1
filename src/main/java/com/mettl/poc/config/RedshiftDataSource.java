@@ -1,4 +1,4 @@
-package com.mettl.poc.config.db;
+package com.mettl.poc.config;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

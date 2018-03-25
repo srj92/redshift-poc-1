@@ -1,4 +1,4 @@
-package com.mettl.poc.messaging.dto;
+package com.mettl.poc.dto;
 
 import java.time.LocalDateTime;
 
